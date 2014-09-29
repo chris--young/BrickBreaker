@@ -1,6 +1,5 @@
 /* *
  * BrickBreaker.java
- *
  * Author: Chris Young
  */
 
@@ -144,13 +143,17 @@ public class BrickBreaker extends JFrame implements KeyListener {
     return new Vector( 0, 0 );
   }
 
+  // Sometimes this produces unexpected results.
   private void handleCollision( Vector collisionNormal, boolean collidingWithPlayer ) {
-    if( collisionNormal.x != 0 )
+    if( collisionNormal.x != 0 ) {
       ball.velocity.x *= -1;
-    if( collisionNormal.y != 0 )
+      ball.position.x = (collisionNormal.x > 0) ? ball.position.x - ball.width/2 : ball.position.x + ball.width/2;
+    }
+    if( collisionNormal.y != 0 ) {
       ball.velocity.y *= -1;
+      ball.position.y = (collisionNormal.y > 0) ? ball.position.y - ball.width/2 : ball.position.y + ball.width/2;
+    }
 
-    // Sometimes this produces unexpected results.
     if( collidingWithPlayer ) {
       double intersect = ball.position.x-player.position.x;
       double deflectionCoefficient = intersect/player.width/2;
@@ -193,8 +196,7 @@ public class BrickBreaker extends JFrame implements KeyListener {
     g.drawImage( bufferedImage, 0, 0, null );
   }
 
-  // This method is not used but must be declared to implement KeyListener.
-  public void keyTyped( KeyEvent e ) {}
+  public void keyTyped( KeyEvent e ) {} // This method is not used but must be declared to implement KeyListener.
 
   public void keyPressed( KeyEvent e ) {
     switch( e.getKeyCode() ) {
@@ -266,7 +268,6 @@ public class BrickBreaker extends JFrame implements KeyListener {
               iterator.remove();
               score++;
             }
-
             break;
           }
         }
@@ -276,14 +277,14 @@ public class BrickBreaker extends JFrame implements KeyListener {
 
   public static void main( String arguments[] ) {
     BrickBreaker game = new BrickBreaker();
-
     double timeRunning = 0;
-
     long before = System.nanoTime();
+
     while( true ) {
       long now = System.nanoTime();
       long timeSplice = now-before;
       double timeCoefficient = timeSplice/Math.pow( 10, 9 );
+
       before = now;
 
       game.physics( timeCoefficient );
