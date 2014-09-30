@@ -298,12 +298,12 @@ public class BrickBreaker extends JFrame implements KeyListener {
     BrickBreaker game = new BrickBreaker();
 
     double timeRunning = 0;
-    long before = System.nanoTime();
+    long before = System.currentTimeMillis();
 
     while( true ) {
-      long now = System.nanoTime();
+      long now = System.currentTimeMillis();
       long timeSplice = now-before;
-      double timeCoefficient = timeSplice/Math.pow( 10, 9 );
+      double timeCoefficient = timeSplice/1000.0;
 
       before = now;
 
