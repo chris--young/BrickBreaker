@@ -12,7 +12,7 @@ import javax.swing.*;
 import java.applet.*;
 import java.net.*;
 
-public class BrickBreaker extends JFrame implements KeyListener {
+public class BrickBreaker extends JPanel implements KeyListener {
   private class Vector {
     double x, y;
 
@@ -48,8 +48,8 @@ public class BrickBreaker extends JFrame implements KeyListener {
   private final int PLAYER_VELOCITY = 200;
   private final double DEFLECTION_ANGLE = 5*Math.PI/2;
 
-  private final int WINDOW_WIDTH = 640;
-  private final int WINDOW_HEIGHT = 480;
+  private final static int WINDOW_WIDTH = 640;
+  private final static int WINDOW_HEIGHT = 480;
 
   private boolean leftKeyDown = false;
   private boolean rightKeyDown = false;
@@ -70,13 +70,7 @@ public class BrickBreaker extends JFrame implements KeyListener {
   private AudioClip bleep, bloop, win, lose;
 
   BrickBreaker() {
-    super( "BrickBreaker" );
-
-    setBounds( 100, 100, WINDOW_WIDTH, WINDOW_HEIGHT );
-    setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-    setResizable( false );
-    setVisible( true );
-
+    this.setFocusable( true );
     addKeyListener( this );
 
     bricks.add( player );
@@ -161,13 +155,18 @@ public class BrickBreaker extends JFrame implements KeyListener {
 
   // Sometimes this produces unexpected results.
   private void handleCollision( Vector collisionNormal, boolean collidingWithPlayer ) {
+    /* System.out.print("collision: ");
+    System.out.print(collisionNormal.x);
+    System.out.print(" , ");
+    System.out.println(collisionNormal.y); */
+
     if( collisionNormal.x != 0 ) {
       ball.velocity.x *= -1;
-      ball.position.x = (collisionNormal.x > 0) ? ball.position.x - ball.width/2 : ball.position.x + ball.width/2;
+      ball.position.x = (collisionNormal.x > 0) ? ball.position.x-ball.width/2 : ball.position.x+ball.width/2;
     }
     if( collisionNormal.y != 0 ) {
       ball.velocity.y *= -1;
-      ball.position.y = (collisionNormal.y > 0) ? ball.position.y - ball.width/2 : ball.position.y + ball.width/2;
+      ball.position.y = (collisionNormal.y > 0) ? ball.position.y-ball.width/2 : ball.position.y+ball.width/2;
     }
 
     if( collidingWithPlayer ) {
@@ -186,8 +185,8 @@ public class BrickBreaker extends JFrame implements KeyListener {
     bleepyBloopy = !bleepyBloopy;
   }
 
-  public synchronized void paint( Graphics g ) {
-    super.paint( g );
+  public synchronized void paintComponent( Graphics g ) {
+    super.paintComponent( g );
 
     BufferedImage bufferedImage = new BufferedImage( WINDOW_WIDTH, WINDOW_HEIGHT, BufferedImage.TYPE_INT_ARGB );
     Graphics2D graphics = bufferedImage.createGraphics();
@@ -255,6 +254,11 @@ public class BrickBreaker extends JFrame implements KeyListener {
   public synchronized void physics( double timeCoefficient ) {
     handleInput();
 
+    /* System.out.print("ball: ");
+    System.out.print(ball.velocity.x);
+    System.out.print(" , ");
+    System.out.println(ball.velocity.y); */
+
     if( !gamePaused ) {
       ball.position.x += ball.velocity.x*timeCoefficient;
       ball.position.y += ball.velocity.y*timeCoefficient;
@@ -304,7 +308,14 @@ public class BrickBreaker extends JFrame implements KeyListener {
   }
 
   public static void main( String arguments[] ) {
+    JFrame frame = new JFrame( "BrickBreaker" );
     BrickBreaker game = new BrickBreaker();
+
+    frame.add( game );
+    frame.setBounds( 100, 100, WINDOW_WIDTH, WINDOW_HEIGHT );
+    frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+    frame.setResizable( false );
+    frame.setVisible( true );
 
     double timeRunning = 0;
     long before = System.currentTimeMillis();
@@ -315,6 +326,12 @@ public class BrickBreaker extends JFrame implements KeyListener {
       double timeCoefficient = timeSplice/1000.0;
 
       before = now;
+
+      /* System.out.println("__new frame__");
+      System.out.print("timeSplice: ");
+      System.out.println(timeSplice);
+      System.out.print("timeCoefficient: ");
+      System.out.println(timeCoefficient); */
 
       game.physics( timeCoefficient );
       game.repaint();
