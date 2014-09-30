@@ -44,7 +44,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
     }
   }
 
-  private final int BALL_VELOCITY = 200;
+  private int BALL_VELOCITY = 200;
   private final int PLAYER_VELOCITY = 200;
   private final double DEFLECTION_ANGLE = 5*Math.PI/2;
 
@@ -62,9 +62,9 @@ public class BrickBreaker extends JPanel implements KeyListener {
 
   private int score = 0;
 
-  private ArrayList<Brick> bricks = new ArrayList<Brick>();
+  private ArrayList<Brick> bricks;
+  private MovingBrick ball;
   private MovingBrick player = new MovingBrick( new Vector( WINDOW_WIDTH/2, WINDOW_HEIGHT-40 ), 80, 10, new Color( 100, 100, 100 ) );
-  private MovingBrick ball = new MovingBrick( new Vector( player.position.x, player.position.y-10 ), 10, 10, new Color( 50, 50, 50 ) );
 
   private boolean bleepyBloopy = true;
   private AudioClip bleep, bloop, win, lose;
@@ -72,12 +72,6 @@ public class BrickBreaker extends JPanel implements KeyListener {
   BrickBreaker() {
     this.setFocusable( true );
     addKeyListener( this );
-
-    bricks.add( player );
-
-    for( int y = 1; y < 5; y++ )
-      for( int x = 1; x < 17; x++ )
-        bricks.add( new Brick( new Vector( WINDOW_WIDTH/16*x-(WINDOW_WIDTH/32), (10*y+y)+30 ), (WINDOW_WIDTH-17)/16, 10, new Color( 125, 125, 125 ) ) );
 
     try {
       bleep = Applet.newAudioClip( new URL( "file:" + System.getProperty("user.dir") + "/bleep.wav" ));
@@ -88,6 +82,19 @@ public class BrickBreaker extends JPanel implements KeyListener {
       System.out.println( exception );
       System.exit( 1 );
     }
+
+    setupGame();
+  }
+
+  private void setupGame() {
+    bricks = new ArrayList<Brick>();
+    ball = new MovingBrick( new Vector( player.position.x, player.position.y-10 ), 10, 10, new Color( 50, 50, 50 ) );
+
+    bricks.add( player );
+
+    for( int y = 1; y < 5; y++ )
+      for( int x = 1; x < 17; x++ )
+        bricks.add( new Brick( new Vector( WINDOW_WIDTH/16*x-(WINDOW_WIDTH/32), (10*y+y)+30 ), (WINDOW_WIDTH-17)/16, 10, new Color( 125, 125, 125 ) ) );
   }
 
   private void handleInput() {
@@ -108,6 +115,11 @@ public class BrickBreaker extends JPanel implements KeyListener {
     if( spaceKeyDown && newGame ) {
       ball.velocity.y = 1-BALL_VELOCITY;
       newGame = false;
+    } else if( spaceKeyDown && gameOver ) {
+      setupGame();
+      newGame = true;
+      gameOver = false;
+      score = 0;
     }
   }
 
@@ -155,11 +167,6 @@ public class BrickBreaker extends JPanel implements KeyListener {
 
   // Sometimes this produces unexpected results.
   private void handleCollision( Vector collisionNormal, boolean collidingWithPlayer ) {
-    /* System.out.print("collision: ");
-    System.out.print(collisionNormal.x);
-    System.out.print(" , ");
-    System.out.println(collisionNormal.y); */
-
     if( collisionNormal.x != 0 ) {
       ball.velocity.x *= -1;
       ball.position.x = (collisionNormal.x > 0) ? ball.position.x-ball.width/2 : ball.position.x+ball.width/2;
@@ -200,16 +207,16 @@ public class BrickBreaker extends JPanel implements KeyListener {
     graphics.setColor( ball.color );
     graphics.fillOval( (int)Math.round( ball.position.x-ball.width/2 ), (int)Math.round( ball.position.y-ball.height/2 ), ball.width, ball.height );
 
-    // These should be centered better.	
     if( newGame && !gamePaused ) {
       graphics.drawString( "Use the left and right arrows to move.", WINDOW_WIDTH/2-117, WINDOW_HEIGHT/2 );
       graphics.drawString( "Escape pauses the game.", WINDOW_WIDTH/2-76, WINDOW_HEIGHT/2+20 );
       graphics.drawString( "Press the spacebar to begin.", WINDOW_WIDTH/2-87, WINDOW_HEIGHT/2+40 );
     } else if( gamePaused && !gameOver )
       graphics.drawString( "Paused", WINDOW_WIDTH/2-22, WINDOW_HEIGHT/2+20 );
-    else if( gameOver )
+    else if( gameOver ) {
       graphics.drawString( "Game Over", WINDOW_WIDTH/2-33, WINDOW_HEIGHT/2+20 );
-    else if( gameWon )
+      graphics.drawString( "Press the spacebar to try again.", WINDOW_WIDTH/2-87, WINDOW_HEIGHT/2+40 );
+    } else if( gameWon )
       graphics.drawString( "You Win!", WINDOW_WIDTH/2-27, WINDOW_HEIGHT/2+20 );
 
     graphics.drawString( "Score: " + score, 17, 23 );
@@ -254,11 +261,6 @@ public class BrickBreaker extends JPanel implements KeyListener {
   public synchronized void physics( double timeCoefficient ) {
     handleInput();
 
-    /* System.out.print("ball: ");
-    System.out.print(ball.velocity.x);
-    System.out.print(" , ");
-    System.out.println(ball.velocity.y); */
-
     if( !gamePaused ) {
       ball.position.x += ball.velocity.x*timeCoefficient;
       ball.position.y += ball.velocity.y*timeCoefficient;
@@ -299,6 +301,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
               handleCollision( collisionNormal, false );
               iterator.remove();
               score++;
+              BALL_VELOCITY += 3;
             }
             break;
           }
@@ -326,12 +329,6 @@ public class BrickBreaker extends JPanel implements KeyListener {
       double timeCoefficient = timeSplice/1000.0;
 
       before = now;
-
-      /* System.out.println("__new frame__");
-      System.out.print("timeSplice: ");
-      System.out.println(timeSplice);
-      System.out.print("timeCoefficient: ");
-      System.out.println(timeCoefficient); */
 
       game.physics( timeCoefficient );
       game.repaint();
