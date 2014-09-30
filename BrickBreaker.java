@@ -63,7 +63,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
   private int score = 0;
 
   private ArrayList<Brick> bricks = new ArrayList<Brick>();
-  private MovingBrick player = new MovingBrick( new Vector( WINDOW_WIDTH/2, WINDOW_HEIGHT-20 ), 80, 10, new Color( 100, 100, 100 ) );
+  private MovingBrick player = new MovingBrick( new Vector( WINDOW_WIDTH/2, WINDOW_HEIGHT-40 ), 80, 10, new Color( 100, 100, 100 ) );
   private MovingBrick ball = new MovingBrick( new Vector( player.position.x, player.position.y-10 ), 10, 10, new Color( 50, 50, 50 ) );
 
   private boolean bleepyBloopy = true;
@@ -77,7 +77,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
 
     for( int y = 1; y < 5; y++ )
       for( int x = 1; x < 17; x++ )
-        bricks.add( new Brick( new Vector( WINDOW_WIDTH/16*x-(WINDOW_WIDTH/32), (10*y+y)+60 ), (WINDOW_WIDTH-17)/16, 10, new Color( 125, 125, 125 ) ) );
+        bricks.add( new Brick( new Vector( WINDOW_WIDTH/16*x-(WINDOW_WIDTH/32), (10*y+y)+30 ), (WINDOW_WIDTH-17)/16, 10, new Color( 125, 125, 125 ) ) );
 
     try {
       bleep = Applet.newAudioClip( new URL( "file:" + System.getProperty("user.dir") + "/bleep.wav" ));
@@ -212,7 +212,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
     else if( gameWon )
       graphics.drawString( "You Win!", WINDOW_WIDTH/2-27, WINDOW_HEIGHT/2+20 );
 
-    graphics.drawString( "Score: " + score, 17, 47 );
+    graphics.drawString( "Score: " + score, 17, 23 );
 
     g.drawImage( bufferedImage, 0, 0, null );
   }
@@ -271,9 +271,9 @@ public class BrickBreaker extends JPanel implements KeyListener {
           handleCollision( new Vector( -1, 0 ), false );
         else if( ball.position.x+ball.width/2 >= WINDOW_WIDTH-1 )
           handleCollision( new Vector( 1, 0 ), false );
-        else if( ball.position.y-ball.height/2 <= 21 ) // This should use the systems title bar height.
+        else if( ball.position.y-ball.height/2 <= 1 )
           handleCollision( new Vector( 0, -1 ), false );
-        else if( ball.position.y+ball.height/2 >= WINDOW_HEIGHT-1 ) {
+        else if( ball.position.y+ball.height/2 >= WINDOW_HEIGHT-21 ) {
           if( bricks.size() > 1 && gameOver == false ) {
             lose.play();
             gameOver = true;
