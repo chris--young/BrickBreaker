@@ -9,6 +9,8 @@ import java.awt.image.BufferedImage;
 import java.math.*;
 import java.util.*;
 import javax.swing.*;
+import java.applet.*;
+import java.net.*;
 
 public class BrickBreaker extends JFrame implements KeyListener {
   private class Vector {
@@ -63,6 +65,9 @@ public class BrickBreaker extends JFrame implements KeyListener {
   private MovingBrick player = new MovingBrick( new Vector( WINDOW_WIDTH/2, WINDOW_HEIGHT-20 ), 80, 10, new Color( 100, 100, 100 ) );
   private MovingBrick ball = new MovingBrick( new Vector( player.position.x, player.position.y-10 ), 10, 10, new Color( 50, 50, 50 ) );
 
+  private boolean bleepyBloopy = true;
+  private AudioClip bleep, bloop;
+
   BrickBreaker() {
     super( "BrickBreaker" );
 
@@ -78,6 +83,14 @@ public class BrickBreaker extends JFrame implements KeyListener {
     for( int y = 1; y < 5; y++ )
       for( int x = 1; x < 17; x++ )
         bricks.add( new Brick( new Vector( WINDOW_WIDTH/16*x-(WINDOW_WIDTH/32), (10*y+y)+60 ), (WINDOW_WIDTH-17)/16, 10, new Color( 125, 125, 125 ) ) );
+
+    try {
+      bleep = Applet.newAudioClip( new URL( "file:" + System.getProperty("user.dir") + "/bleep.wav" ));
+      bloop = Applet.newAudioClip( new URL( "file:" + System.getProperty("user.dir") + "/bloop.wav" ));
+    } catch( MalformedURLException exception ) {
+      System.out.println( exception );
+      System.exit( 1 );
+    }
   }
 
   private void handleInput() {
@@ -162,6 +175,12 @@ public class BrickBreaker extends JFrame implements KeyListener {
       ball.velocity.x = Math.sin( theta )*BALL_VELOCITY;
       ball.velocity.y = 0-Math.cos( theta )*BALL_VELOCITY;
     }
+
+    if (bleepyBloopy == true)
+      bleep.play();
+    else
+      bloop.play();
+    bleepyBloopy = !bleepyBloopy;
   }
 
   public synchronized void paint( Graphics g ) {
@@ -277,6 +296,7 @@ public class BrickBreaker extends JFrame implements KeyListener {
 
   public static void main( String arguments[] ) {
     BrickBreaker game = new BrickBreaker();
+
     double timeRunning = 0;
     long before = System.nanoTime();
 
