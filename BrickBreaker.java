@@ -58,6 +58,7 @@ public class BrickBreaker extends JFrame implements KeyListener {
   private boolean newGame = true;
   private boolean gamePaused = false;
   private boolean gameOver = false;
+  private boolean gameWon = false;
 
   private int score = 0;
 
@@ -66,7 +67,7 @@ public class BrickBreaker extends JFrame implements KeyListener {
   private MovingBrick ball = new MovingBrick( new Vector( player.position.x, player.position.y-10 ), 10, 10, new Color( 50, 50, 50 ) );
 
   private boolean bleepyBloopy = true;
-  private AudioClip bleep, bloop;
+  private AudioClip bleep, bloop, win, lose;
 
   BrickBreaker() {
     super( "BrickBreaker" );
@@ -87,6 +88,8 @@ public class BrickBreaker extends JFrame implements KeyListener {
     try {
       bleep = Applet.newAudioClip( new URL( "file:" + System.getProperty("user.dir") + "/bleep.wav" ));
       bloop = Applet.newAudioClip( new URL( "file:" + System.getProperty("user.dir") + "/bloop.wav" ));
+      win = Applet.newAudioClip( new URL( "file:" + System.getProperty("user.dir") + "/win.wav" ));
+      lose = Applet.newAudioClip( new URL( "file:" + System.getProperty("user.dir") + "/lose.wav" ));
     } catch( MalformedURLException exception ) {
       System.out.println( exception );
       System.exit( 1 );
@@ -207,7 +210,7 @@ public class BrickBreaker extends JFrame implements KeyListener {
       graphics.drawString( "Paused", WINDOW_WIDTH/2-22, WINDOW_HEIGHT/2+20 );
     else if( gameOver )
       graphics.drawString( "Game Over", WINDOW_WIDTH/2-33, WINDOW_HEIGHT/2+20 );
-    else if( bricks.size() == 1 )
+    else if( gameWon )
       graphics.drawString( "You Win!", WINDOW_WIDTH/2-27, WINDOW_HEIGHT/2+20 );
 
     graphics.drawString( "Score: " + score, 17, 47 );
@@ -267,12 +270,18 @@ public class BrickBreaker extends JFrame implements KeyListener {
         else if( ball.position.y-ball.height/2 <= 21 ) // This should use the systems title bar height.
           handleCollision( new Vector( 0, -1 ), false );
         else if( ball.position.y+ball.height/2 >= WINDOW_HEIGHT-1 ) {
-          if( bricks.size() > 1 ) {
+          if( bricks.size() > 1 && gameOver == false ) {
+            lose.play();
             gameOver = true;
             ball.velocity.x = 0;
             ball.velocity.y = 0;
           } else
             handleCollision( new Vector( 0, 1 ), false );
+        }
+
+        if( bricks.size() == 1 && gameWon == false ) {
+          win.play();
+          gameWon = true;
         }
 
         for( Iterator<Brick> iterator = bricks.iterator(); iterator.hasNext(); ) {
