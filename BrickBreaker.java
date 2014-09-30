@@ -120,6 +120,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
       newGame = true;
       gameOver = false;
       score = 0;
+      BALL_VELOCITY = 200;
     }
   }
 
