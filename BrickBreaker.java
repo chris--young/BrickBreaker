@@ -46,7 +46,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
 
   private int BALL_VELOCITY = 3;
   private final int PLAYER_VELOCITY = 2;
-  private final double DEFLECTION_ANGLE = 5*Math.PI/2;
+  private final double DEFLECTION_ANGLE = 5.0*Math.PI/2.0;
 
   private final static int WINDOW_WIDTH = 640;
   private final static int WINDOW_HEIGHT = 480;
@@ -63,11 +63,23 @@ public class BrickBreaker extends JPanel implements KeyListener {
   private int score = 0;
 
   private ArrayList<Brick> bricks;
-  private MovingBrick ball;
   private MovingBrick player = new MovingBrick( new Vector( WINDOW_WIDTH/2, WINDOW_HEIGHT-40 ), 80, 10, new Color( 100, 100, 100 ) );
+  private MovingBrick ball = new MovingBrick( new Vector( player.position.x, player.position.y-10 ), 10, 10, new Color( 50, 50, 50 ) );
 
   private boolean bleepyBloopy = true;
   private AudioClip bleep, bloop, win, lose;
+
+  private Vector a = new Vector(0, 0);
+  private Vector b = new Vector(0, 0);
+  private Vector c = new Vector(0, 0);
+  private Vector d = new Vector(0, 0);
+  private Vector collision = new Vector(0, 0);
+  
+  private double intersect, deflectionCoefficient, theta;
+
+  private Color clearColor = new Color( 225, 225, 225 );
+
+  private int index = 0;
 
   BrickBreaker() {
     this.setFocusable( true );
@@ -88,7 +100,8 @@ public class BrickBreaker extends JPanel implements KeyListener {
 
   private void setupGame() {
     bricks = new ArrayList<Brick>();
-    ball = new MovingBrick( new Vector( player.position.x, player.position.y-10 ), 10, 10, new Color( 50, 50, 50 ) );
+    ball.position.x = player.position.x;
+    ball.position.y = player.position.y-10;
 
     bricks.add( player );
 
@@ -126,60 +139,90 @@ public class BrickBreaker extends JPanel implements KeyListener {
   }
 
   private Vector checkCollision( Brick brick ) {
-    Vector a = new Vector( brick.position.x-brick.width/2, brick.position.y-brick.height/2 );
-    Vector b = new Vector( brick.position.x+brick.width/2, brick.position.y-brick.height/2 );
-    Vector c = new Vector( brick.position.x+brick.width/2, brick.position.y+brick.height/2 );
-    Vector d = new Vector( brick.position.x-brick.width/2, brick.position.y+brick.height/2 );
+    a.x = brick.position.x-brick.width/2;
+    a.y = brick.position.y-brick.height/2;
+    b.x = brick.position.x+brick.width/2;
+    b.y = brick.position.y-brick.height/2;
+    c.x = brick.position.x+brick.width/2;
+    c.y = brick.position.y+brick.height/2;
+    d.x = brick.position.x-brick.width/2;
+    d.y = brick.position.y+brick.height/2;
 
     if( ball.position.y < a.y ) {
       if( ball.position.x < a.x ) {
-        if( ball.position.x+ball.width/2 > a.x && ball.position.y+ball.height/2 > a.y )
-          return new Vector( 1, 1 );
+        if( ball.position.x+ball.width/2 > a.x && ball.position.y+ball.height/2 > a.y ) {
+          collision.x = 1;
+          collision.y = 1;
+          return collision;
+        }
       } else if( ball.position.x < b.x ) {
-        if( ball.position.y+ball.height/2 > a.y )
-          return new Vector( 0, 1 );
+        if( ball.position.y+ball.height/2 > a.y ) {
+          collision.x = 0;
+          collision.y = 1;
+          return collision;
+        }
       } else {
-        if( ball.position.x-ball.width/2 < b.x && ball.position.y+ball.height/2 > b.y )
-          return new Vector( -1, 1 );
+        if( ball.position.x-ball.width/2 < b.x && ball.position.y+ball.height/2 > b.y ) {
+          collision.x = -1;
+          collision.y = 1;
+          return collision;
+        }
       }
     } else if( ball.position.y < c.y ) {
       if( ball.position.x > c.x ) {
-        if( ball.position.x-ball.width/2 < c.x )
-          return new Vector( -1, 0 );
+        if( ball.position.x-ball.width/2 < c.x ) {
+          collision.x = -1;
+          collision.y = 0;
+          return collision;
+        }
       } else if( ball.position.x < d.x ) {
-        if( ball.position.x+ball.width/2 > d.x )
-          return new Vector( 1, 0 );
+        if( ball.position.x+ball.width/2 > d.x ) {
+          collision.x = 1;
+          collision.y = 1;
+          return collision;
+        }
       }
     } else {
       if( ball.position.x > c.x ) {
-        if( ball.position.x-ball.width/2 < c.x && ball.position.y-ball.height/2 < c.y )
-          return new Vector( -1, -1 );
+        if( ball.position.x-ball.width/2 < c.x && ball.position.y-ball.height/2 < c.y ) {
+          collision.x = -1;
+          collision.y = -1;
+          return collision;
+        }
       } else if( ball.position.x > d.x ) {
-        if( ball.position.y-ball.height/2 < d.y )
-          return new Vector( 0, -1 );
+        if( ball.position.y-ball.height/2 < d.y ) {
+          collision.x = 0;
+          collision.y = -1;
+          return collision;
+        }
       } else {
-        if( ball.position.x+ball.width/2 > d.x && ball.position.y-ball.height/2 < d.y )
-          return new Vector( 1, -1 );
+        if( ball.position.x+ball.width/2 > d.x && ball.position.y-ball.height/2 < d.y ) {
+          collision.x = 1;
+          collision.y = -1;
+          return collision;
+        }
       }
     }
 
-    return new Vector( 0, 0 );
+    collision.x = 0;
+    collision.y = 0;
+    return collision;
   }
 
-  private void handleCollision( Vector collisionNormal, boolean collidingWithPlayer ) {
-    if( collisionNormal.x != 0 ) {
+  private void handleCollision( boolean collidingWithPlayer ) {
+    if( collision.x != 0 ) {
       ball.velocity.x *= -1;
-      ball.position.x = (collisionNormal.x > 0) ? ball.position.x-ball.width/2 : ball.position.x+ball.width/2;
+      ball.position.x = (collision.x > 0) ? ball.position.x-ball.width/2 : ball.position.x+ball.width/2;
     }
-    if( collisionNormal.y != 0 ) {
+    if( collision.y != 0 ) {
       ball.velocity.y *= -1;
-      ball.position.y = (collisionNormal.y > 0) ? ball.position.y-ball.width/2 : ball.position.y+ball.width/2;
+      ball.position.y = (collision.y > 0) ? ball.position.y-ball.width/2 : ball.position.y+ball.width/2;
     }
 
     if( collidingWithPlayer ) {
-      double intersect = ball.position.x-player.position.x;
-      double deflectionCoefficient = intersect/player.width/2;
-      double theta = deflectionCoefficient*DEFLECTION_ANGLE;
+      intersect = ball.position.x-player.position.x;
+      deflectionCoefficient = intersect/player.width/2;
+      theta = deflectionCoefficient*DEFLECTION_ANGLE;
 	
       ball.velocity.x = Math.sin( theta )*BALL_VELOCITY;
       ball.velocity.y = 0-Math.cos( theta )*BALL_VELOCITY;
@@ -192,16 +235,17 @@ public class BrickBreaker extends JPanel implements KeyListener {
     bleepyBloopy = !bleepyBloopy;
   }
 
-  public synchronized void paintComponent( Graphics g ) {
-    super.paintComponent( g );
+  public synchronized void paintComponent( Graphics graphics ) {
+    super.paintComponent( graphics );
 
-    BufferedImage bufferedImage = new BufferedImage( WINDOW_WIDTH, WINDOW_HEIGHT, BufferedImage.TYPE_INT_ARGB );
-    Graphics2D graphics = bufferedImage.createGraphics();
+    graphics.setColor( clearColor );
+    graphics.fillRect( 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT );
 
-    for( Iterator<Brick> iterator = bricks.iterator(); iterator.hasNext(); ) {
-      Brick brick = iterator.next();
-      graphics.setColor( brick.color );
-      graphics.fillRect( (int)Math.round( brick.position.x-brick.width/2 ), (int)Math.round( brick.position.y-brick.height/2 ), brick.width, brick.height );
+    // for( Iterator<Brick> iterator = bricks.iterator(); iterator.hasNext(); ) {
+    for( index = 0; index < bricks.size(); index++ ) {
+      // Brick brick = iterator.next();
+      graphics.setColor( bricks.get(index).color );
+      graphics.fillRect( (int)Math.round( bricks.get(index).position.x-bricks.get(index).width/2 ), (int)Math.round( bricks.get(index).position.y-bricks.get(index).height/2 ), bricks.get(index).width, bricks.get(index).height );
     }
 
     graphics.setColor( ball.color );
@@ -220,8 +264,6 @@ public class BrickBreaker extends JPanel implements KeyListener {
       graphics.drawString( "You Win!", WINDOW_WIDTH/2-27, WINDOW_HEIGHT/2+20 );
 
     graphics.drawString( "Score: " + score, 17, 23 );
-
-    g.drawImage( bufferedImage, 0, 0, null );
   }
 
   public void keyTyped( KeyEvent e ) {} // This method is not used but must be declared to implement KeyListener.
@@ -258,31 +300,40 @@ public class BrickBreaker extends JPanel implements KeyListener {
     }
   }
 
-  public synchronized void physics( double timeCoefficient ) {
+  public synchronized void physics() {
     handleInput();
 
     if( !gamePaused ) {
-      ball.position.x += ball.velocity.x*timeCoefficient;
-      ball.position.y += ball.velocity.y*timeCoefficient;
+      ball.position.x += ball.velocity.x;
+      ball.position.y += ball.velocity.y;
 
-      player.position.x += player.velocity.x*timeCoefficient;
-      player.position.y += player.velocity.y*timeCoefficient;
+      player.position.x += player.velocity.x;
+      player.position.y += player.velocity.y;
 
       if( !newGame && !gameOver ) {
-        if( ball.position.x-ball.width/2 <= 1 )
-          handleCollision( new Vector( -1, 0 ), false );
-        else if( ball.position.x+ball.width/2 >= WINDOW_WIDTH-1 )
-          handleCollision( new Vector( 1, 0 ), false );
-        else if( ball.position.y-ball.height/2 <= 1 )
-          handleCollision( new Vector( 0, -1 ), false );
-        else if( ball.position.y+ball.height/2 >= WINDOW_HEIGHT-21 ) {
+        if( ball.position.x-ball.width/2 <= 1 ) {
+          collision.x = -1;
+          collision.y = 0;
+          handleCollision( false );
+        } else if( ball.position.x+ball.width/2 >= WINDOW_WIDTH-1 ) {
+          collision.x = 1;
+          collision.y = 0;
+          handleCollision( false );
+        } else if( ball.position.y-ball.height/2 <= 1 ) {
+          collision.x = 0;
+          collision.y = -1;
+          handleCollision( false );
+        } else if( ball.position.y+ball.height/2 >= WINDOW_HEIGHT-21 ) {
           if( bricks.size() > 1 && gameOver == false ) {
             lose.play();
             gameOver = true;
             ball.velocity.x = 0;
             ball.velocity.y = 0;
-          } else
-            handleCollision( new Vector( 0, 1 ), false );
+          } else {
+            collision.x = 0;
+            collision.y = 1;
+            handleCollision( false );
+          }
         }
 
         if( bricks.size() == 1 && gameWon == false ) {
@@ -290,16 +341,16 @@ public class BrickBreaker extends JPanel implements KeyListener {
           gameWon = true;
         }
 
-        for( Iterator<Brick> iterator = bricks.iterator(); iterator.hasNext(); ) {
-          Brick brick = iterator.next();
-          Vector collisionNormal = checkCollision( brick );
+        for( index = 0; index < bricks.size(); index++ ) {
+          Vector collisionNormal = checkCollision( bricks.get(index) );
 
           if( collisionNormal.x != 0 || collisionNormal.y != 0 ) {
-            if( brick == player )
-              handleCollision( collisionNormal, true );
+            if( bricks.get(index) == player )
+              handleCollision( true );
             else {
-              handleCollision( collisionNormal, false );
-              iterator.remove();
+              handleCollision( false );
+              bricks.remove(bricks.get(index));
+              index--;
               score++;
               BALL_VELOCITY += 0.1;
             }
@@ -320,12 +371,12 @@ public class BrickBreaker extends JPanel implements KeyListener {
     frame.setResizable( false );
     frame.setVisible( true );
 
-    double timeRunning = 0;
     long before = System.currentTimeMillis();
+    long now, timeSplice;
 
     while( true ) {
-      long now = System.currentTimeMillis();
-      long timeSplice = now-before;
+      now = System.currentTimeMillis();
+      timeSplice = now-before;
 
       if( 16-timeSplice > 0 ) {
         try {
@@ -337,10 +388,8 @@ public class BrickBreaker extends JPanel implements KeyListener {
 
       before = now;
 
-      game.physics( 1 );
+      game.physics();
       game.repaint();
-
-      timeRunning += timeSplice;
     }
   }
 }
