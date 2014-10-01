@@ -44,8 +44,8 @@ public class BrickBreaker extends JPanel implements KeyListener {
     }
   }
 
-  private int BALL_VELOCITY = 200;
-  private final int PLAYER_VELOCITY = 200;
+  private int BALL_VELOCITY = 3;
+  private final int PLAYER_VELOCITY = 2;
   private final double DEFLECTION_ANGLE = 5*Math.PI/2;
 
   private final static int WINDOW_WIDTH = 640;
@@ -120,11 +120,11 @@ public class BrickBreaker extends JPanel implements KeyListener {
       newGame = true;
       gameOver = false;
       score = 0;
-      BALL_VELOCITY = 200;
+      BALL_VELOCITY = 3;
+      bleepyBloopy = true;
     }
   }
 
-  // This could be reorganized to prioritize more probable collisions.
   private Vector checkCollision( Brick brick ) {
     Vector a = new Vector( brick.position.x-brick.width/2, brick.position.y-brick.height/2 );
     Vector b = new Vector( brick.position.x+brick.width/2, brick.position.y-brick.height/2 );
@@ -166,7 +166,6 @@ public class BrickBreaker extends JPanel implements KeyListener {
     return new Vector( 0, 0 );
   }
 
-  // Sometimes this produces unexpected results.
   private void handleCollision( Vector collisionNormal, boolean collidingWithPlayer ) {
     if( collisionNormal.x != 0 ) {
       ball.velocity.x *= -1;
@@ -302,7 +301,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
               handleCollision( collisionNormal, false );
               iterator.remove();
               score++;
-              BALL_VELOCITY += 3;
+              BALL_VELOCITY += 0.1;
             }
             break;
           }
@@ -327,11 +326,18 @@ public class BrickBreaker extends JPanel implements KeyListener {
     while( true ) {
       long now = System.currentTimeMillis();
       long timeSplice = now-before;
-      double timeCoefficient = timeSplice/1000.0;
+
+      if( 16-timeSplice > 0 ) {
+        try {
+          Thread.sleep( 16-timeSplice );
+        } catch( InterruptedException e) {
+          Thread.currentThread().interrupt();
+        }
+      }
 
       before = now;
 
-      game.physics( timeCoefficient );
+      game.physics( 1 );
       game.repaint();
 
       timeRunning += timeSplice;
