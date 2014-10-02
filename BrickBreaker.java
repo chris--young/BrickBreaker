@@ -20,6 +20,11 @@ public class BrickBreaker extends JPanel implements KeyListener {
       this.x = x;
       this.y = y;
     }
+
+    public void set( double x, double y ) {
+      this.x = x;
+      this.y = y;
+    }
   }
 
   private class Brick {
@@ -44,7 +49,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
     }
   }
 
-  private int BALL_VELOCITY = 3;
+  private double BALL_VELOCITY = 2.5;
   private final int PLAYER_VELOCITY = 2;
   private final double DEFLECTION_ANGLE = 5.0*Math.PI/2.0;
 
@@ -100,8 +105,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
 
   private void setupGame() {
     bricks = new ArrayList<Brick>();
-    ball.position.x = player.position.x;
-    ball.position.y = player.position.y-10;
+    ball.position.set( player.position.x, player.position.y-10 );
 
     bricks.add( player );
 
@@ -133,79 +137,66 @@ public class BrickBreaker extends JPanel implements KeyListener {
       newGame = true;
       gameOver = false;
       score = 0;
-      BALL_VELOCITY = 3;
+      BALL_VELOCITY = 2.5;
       bleepyBloopy = true;
     }
   }
 
   private Vector checkCollision( Brick brick ) {
-    a.x = brick.position.x-brick.width/2;
-    a.y = brick.position.y-brick.height/2;
-    b.x = brick.position.x+brick.width/2;
-    b.y = brick.position.y-brick.height/2;
-    c.x = brick.position.x+brick.width/2;
-    c.y = brick.position.y+brick.height/2;
-    d.x = brick.position.x-brick.width/2;
-    d.y = brick.position.y+brick.height/2;
+    a.set( brick.position.x-brick.width/2, brick.position.y-brick.height/2 );
+    b.set( brick.position.x+brick.width/2, brick.position.y-brick.height/2 );
+    c.set( brick.position.x+brick.width/2, brick.position.y+brick.height/2 );
+    d.set( brick.position.x-brick.width/2, brick.position.y+brick.height/2 );
 
     if( ball.position.y < a.y ) {
       if( ball.position.x < a.x ) {
         if( ball.position.x+ball.width/2 > a.x && ball.position.y+ball.height/2 > a.y ) {
-          collision.x = 1;
-          collision.y = 1;
+          collision.set( 1, 1 );
           return collision;
         }
       } else if( ball.position.x < b.x ) {
         if( ball.position.y+ball.height/2 > a.y ) {
-          collision.x = 0;
-          collision.y = 1;
+          collision.set( 0, 1 );
           return collision;
         }
       } else {
         if( ball.position.x-ball.width/2 < b.x && ball.position.y+ball.height/2 > b.y ) {
-          collision.x = -1;
-          collision.y = 1;
+          collision.set( -1, 1 );
           return collision;
         }
       }
     } else if( ball.position.y < c.y ) {
       if( ball.position.x > c.x ) {
         if( ball.position.x-ball.width/2 < c.x ) {
-          collision.x = -1;
-          collision.y = 0;
+          collision.set( -1, 0 );
           return collision;
         }
       } else if( ball.position.x < d.x ) {
         if( ball.position.x+ball.width/2 > d.x ) {
-          collision.x = 1;
-          collision.y = 1;
+          collision.set( 1, 1 );
           return collision;
         }
       }
     } else {
       if( ball.position.x > c.x ) {
         if( ball.position.x-ball.width/2 < c.x && ball.position.y-ball.height/2 < c.y ) {
-          collision.x = -1;
-          collision.y = -1;
+          collision.set( -1, -1 );
           return collision;
         }
       } else if( ball.position.x > d.x ) {
         if( ball.position.y-ball.height/2 < d.y ) {
-          collision.x = 0;
-          collision.y = -1;
+          collision.set( 0, -1 );
           return collision;
         }
       } else {
         if( ball.position.x+ball.width/2 > d.x && ball.position.y-ball.height/2 < d.y ) {
-          collision.x = 1;
-          collision.y = -1;
+          collision.set( 1, -1 );
           return collision;
         }
       }
     }
-
-    collision.x = 0;
-    collision.y = 0;
+    
+    collision.set( 0, 0 );
     return collision;
   }
 
@@ -241,9 +232,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
     graphics.setColor( clearColor );
     graphics.fillRect( 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT );
 
-    // for( Iterator<Brick> iterator = bricks.iterator(); iterator.hasNext(); ) {
     for( index = 0; index < bricks.size(); index++ ) {
-      // Brick brick = iterator.next();
       graphics.setColor( bricks.get(index).color );
       graphics.fillRect( (int)Math.round( bricks.get(index).position.x-bricks.get(index).width/2 ), (int)Math.round( bricks.get(index).position.y-bricks.get(index).height/2 ), bricks.get(index).width, bricks.get(index).height );
     }
@@ -304,34 +293,26 @@ public class BrickBreaker extends JPanel implements KeyListener {
     handleInput();
 
     if( !gamePaused ) {
-      ball.position.x += ball.velocity.x;
-      ball.position.y += ball.velocity.y;
-
-      player.position.x += player.velocity.x;
-      player.position.y += player.velocity.y;
+      ball.position.set( ball.position.x+ball.velocity.x, ball.position.y+ball.velocity.y );
+      player.position.set( player.position.x+player.velocity.x, player.position.y+player.velocity.y );
 
       if( !newGame && !gameOver ) {
         if( ball.position.x-ball.width/2 <= 1 ) {
-          collision.x = -1;
-          collision.y = 0;
+          collision.set( -1, 0 );
           handleCollision( false );
         } else if( ball.position.x+ball.width/2 >= WINDOW_WIDTH-1 ) {
-          collision.x = 1;
-          collision.y = 0;
+          collision.set( 1, 0 );
           handleCollision( false );
         } else if( ball.position.y-ball.height/2 <= 1 ) {
-          collision.x = 0;
-          collision.y = -1;
+          collision.set( 0, -1 );
           handleCollision( false );
         } else if( ball.position.y+ball.height/2 >= WINDOW_HEIGHT-21 ) {
           if( bricks.size() > 1 && gameOver == false ) {
             lose.play();
             gameOver = true;
-            ball.velocity.x = 0;
-            ball.velocity.y = 0;
+            ball.velocity.set( 0, 0 );
           } else {
-            collision.x = 0;
-            collision.y = 1;
+            collision.set( 0, 1 );
             handleCollision( false );
           }
         }
