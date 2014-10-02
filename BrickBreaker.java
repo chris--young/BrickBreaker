@@ -49,7 +49,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
     }
   }
 
-  private double BALL_VELOCITY = 2.5;
+  private double BALL_VELOCITY = 2;
   private final int PLAYER_VELOCITY = 2;
   private final double DEFLECTION_ANGLE = 5.0*Math.PI/2.0;
 
@@ -137,7 +137,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
       newGame = true;
       gameOver = false;
       score = 0;
-      BALL_VELOCITY = 2.5;
+      BALL_VELOCITY = 2;
       bleepyBloopy = true;
     }
   }
@@ -333,7 +333,7 @@ public class BrickBreaker extends JPanel implements KeyListener {
               bricks.remove(bricks.get(index));
               index--;
               score++;
-              BALL_VELOCITY += 0.1;
+              BALL_VELOCITY += 0.02;
             }
             break;
           }
